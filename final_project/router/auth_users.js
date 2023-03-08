@@ -23,8 +23,13 @@ return false;
 
 //only registered users can login
 regd_users.post("/login", (req,res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+user = users.find(req.body.name);
+if(!user)
+    return res.status(404).json({message: "User not found"});
+if(user.password !== req.body.password){
+    return res.status(300).json({message: "Login failed"});
+}
+    return res.status(200).json({message:"You logged in!  No idea what you were trying to do here..."});
 });
 
 // Add a book review
