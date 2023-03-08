@@ -18,23 +18,28 @@ public_users.post("/register", (req,res) => {
 });
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-    return res.status(200).json(JSON.stringify(books));
+public_users.get('/',(req, res)=> {
+    return res.status(200).json(books);
 });
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
+public_users.get('/isbn/:isbn',(req, res)=> {
   //Write your code here
-  if (books.find(x=>xreq.params.isbn)){
-
-  }
-  return res.status(300).json({message: "Yet to be implemented"});
+  book = books[req.params.isbn];
+  if (!book)
+    return res.status(404).json({message: "Book not found"});
+  return res.status(300).json(book);
  });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+results = [];
+for(key in books){
+    book = books[key];
+    if(book["author"]===req.params.author)
+        results.push(book);
+}
+    return res.status(200).json(results);
 });
 
 // Get all books based on title
