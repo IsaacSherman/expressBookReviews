@@ -5,6 +5,17 @@ const regd_users = express.Router();
 
 let users = [];
 
+const loggedIn = (username, session)=>{
+    signedIn = false;
+    if(session.authorization) { //get the authorization object stored in the session
+        token = session.authorization['accessToken']; //retrieve the token from authorization object
+        jwt.verify(token, "access",(err,user)=>{ //Use JWT to verify token
+            signedIn = !err;
+        });
+    }
+        return signedIn;
+}
+
 const isValid = (username)=>{ //returns boolean
     console.log(username);
 return users.find(user=>user.name === username) === undefined;
@@ -21,9 +32,21 @@ if(user){
 return false;
 }
 
+
 //only registered users can login
 regd_users.post("/login", (req,res) => {
-user = users.find(req.body.name);
+user = users.find(x=>x.username === req.body.name);
+if(isValid(user)){
+    if(authenticatedUser(user.username, user.password)){
+        let accessToken = jwt.sign({
+            data: password
+          }, 'access', { expiresIn: 60 * 60 });
+      
+          req.session.authorization = {
+            accessToken,username
+        }
+    }
+}
 if(!user)
     return res.status(404).json({message: "User not found"});
 if(user.password !== req.body.password){
@@ -34,8 +57,7 @@ if(user.password !== req.body.password){
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-
-
+if(req.session.authorization.accessToken === jwt.verify())
     return res.status(300).json({message: "Yet to be implemented"});
 });
 
