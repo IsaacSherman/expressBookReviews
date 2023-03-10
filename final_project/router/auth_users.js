@@ -4,15 +4,11 @@ let books = require("./booksdb.js");
 const regd_users = express.Router();
 
 let users = [        {
-    "name": "bob",
+    "name": "Kidu",
     "password": "bob1234"
 },
 {
-    "name": "bob3",
-    "password": "bob1234"
-},
-{
-    "name": "bob2",
+    "name": "Gil",
     "password": "bob1234"
 }
 ];
@@ -79,6 +75,38 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
         return res.status(200).json({message: status});
     return res.status(403).json({message:status});
 });
+// Delete a book review
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const book = books[req.params.isbn];
+    if(!book){
+        return res.status(403).json({
+            message: "Book not found (id = " + req.params.isbn + ")"
+        });
+    }
+    if(req.session.authorization){
+        token = req.session.authorization['accessToken'];
+        status = "User not logged in";
+        statusnum = 403;
+        jwt.verify(token, "access", (err, user)=>{
+            if(!err){
+                let target = req.session.authorization.username;
+                if(book.reviews[target])
+                    {
+                        delete book.reviews[target];
+                        status = "Review deleted successfully";
+                    }
+                    else{
+                        status = "That user doesn't have a review to delete";
+                    }
+                statusnum = 200;
+            }else{
+                status = "Login failed";
+            }
+        });
+    }
+    return res.status(statusnum).json({message:status});
+});
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
