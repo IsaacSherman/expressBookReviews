@@ -3,18 +3,19 @@ const jwt = require('jsonwebtoken');
 let books = require("./booksdb.js");
 const regd_users = express.Router();
 
-let users = [];
-
-const loggedIn = (username, session)=>{
-    signedIn = false;
-    if(session.authorization) { //get the authorization object stored in the session
-        token = session.authorization['accessToken']; //retrieve the token from authorization object
-        jwt.verify(token, "access",(err,user)=>{ //Use JWT to verify token
-            signedIn = !err;
-        });
-    }
-        return signedIn;
+let users = [        {
+    "name": "bob",
+    "password": "bob1234"
+},
+{
+    "name": "bob3",
+    "password": "bob1234"
+},
+{
+    "name": "bob2",
+    "password": "bob1234"
 }
+];
 
 const isValid = (username)=>{ //returns boolean
     console.log(username);
@@ -26,7 +27,7 @@ const authenticatedUser = (username,password)=>{ //returns boolean
 
 const user = users.find(x=>x.name === username);
 if(user){
-    console.log(password);
+    console.log(user, username, password);
     return user.password === password;
 }
 return false;
@@ -35,30 +36,48 @@ return false;
 
 //only registered users can login
 regd_users.post("/login", (req,res) => {
-user = users.find(x=>x.username === req.body.name);
-if(isValid(user)){
-    if(authenticatedUser(user.username, user.password)){
-        let accessToken = jwt.sign({
-            data: password
-          }, 'access', { expiresIn: 60 * 60 });
-      
-          req.session.authorization = {
-            accessToken,username
+    username = "no username"
+    user = users.find(x=>x.name === req.body.user.name);
+    if(user){
+        if(authenticatedUser(user.name, user.password)){
+            let accessToken = jwt.sign({
+                data: user.password
+            }, 'access', { expiresIn: 60 * 60 });
+        username = user.name;
+            req.session.authorization = {
+                accessToken,username
+            }
+        return res.status(200).json({message:"You logged in ", user});
         }
+        return res.status(403).json({message: "Password incorrect"});
     }
-}
-if(!user)
-    return res.status(404).json({message: "User not found"});
-if(user.password !== req.body.password){
-    return res.status(300).json({message: "Login failed"});
-}
-    return res.status(200).json({message:"You logged in!  No idea what you were trying to do here..."});
+    body = req.body;
+        return res.status(404).json({message: "User not found:", username});
 });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-if(req.session.authorization.accessToken === jwt.verify())
-    return res.status(300).json({message: "Yet to be implemented"});
+    let username = "";
+    const book = books[req.params.isbn];
+    if(!book){
+        return res.status(403).json({
+            message: "Book not found (id = " + req.params.isbn + ")"
+        });
+    }
+    if(req.session.authorization){
+        token = req.session.authorization['accessToken'];
+        status = "User not logged in";
+        jwt.verify(token, "access", (err, user)=>{
+            if(!err){
+                book.reviews[req.session.authorization.username] = req.query.review;
+                status = "Review added/updated successfully";
+            }
+                
+        });
+    }
+    if(status)
+        return res.status(200).json({message: status});
+    return res.status(403).json({message:status});
 });
 
 module.exports.authenticated = regd_users;

@@ -7,7 +7,6 @@ const public_users = express.Router();
 
 public_users.post("/register", (req,res) => {
 
-    //return res.status(300).json({message: users});
 
     let username = req.body.user.username;
     let password = req.body.user.password;
@@ -23,7 +22,7 @@ public_users.post("/register", (req,res) => {
         return res.status(299).json({message: "User already registered"});
     }
     users.push(user);
-    return res.status(200).json({message: "User " + username + " added"});
+    return res.status(200).json({message: "User " + username + " added", users});
 });
 
 // Get the book list available in the shop
